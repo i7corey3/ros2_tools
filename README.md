@@ -1,10 +1,10 @@
 # ros2_tools
 
 This repository expands on the ros2 package creations commands by auto generating majority of the ros2 related code including:
-- Creating config folder with param file
-- Creating launch folder with an auto generated launch file ready to use
-- Creates a generic node file linked to the ros2 command
-- Works for both python anc c++ nodes
+- Creating a config folder with an auto generated parameters file
+- Creating a launch folder with an auto generated launch file ready to use
+- Creates a generic node file linked with the ros2 command
+- Works with both python and c++ packages
 - Available for ros2 on Linux and Windows
 
 ## How To Use
