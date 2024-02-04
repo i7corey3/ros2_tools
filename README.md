@@ -10,7 +10,9 @@ This repository expands on the ros2 package creations commands by auto generatin
 ## How To Use
 
 Add both the createPackage and buildNode files to your src/ folder 
-> createPackage.sh in using ros on Linux, createPackage.bat for Windows
+
+> createPackage.sh in using ros2 on Linux, createPackage.bat for Windows
+
 
 This script takes in three arguments <code_language> <package_name> <node_name>
 
