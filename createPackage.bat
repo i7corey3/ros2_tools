@@ -1,4 +1,4 @@
-
+cd %~p0
 call C:\opt\ros\galactic\x64\setup.bat
 @echo off
 
