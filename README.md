@@ -1,6 +1,6 @@
 # ros2_tools
 
-This repository expands on the ros2 node creations command that will setup majority of the ros related code including:
+This repository expands on the ros2 package creations commands by setuping majority of the ros2 related code including:
 - Creating config folder with param file
 - Creating launch folder with an auto generated launch file ready to use
 - Creates a generic node file linked to the ros2 command
@@ -14,7 +14,7 @@ Add both the createPackage and buildNode files to your src/ folder
 
 This script takes in three arguments <code_language> <package_name> <node_name>
 
-To create an example node in python run:
+To create an example package in python run:
 
 ```
 ./createPackage.sh python <package_name> <node_name>
