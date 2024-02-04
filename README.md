@@ -1,6 +1,6 @@
 # ros2_tools
 
-This repository expands on the ros2 package creations commands by setuping majority of the ros2 related code including:
+This repository expands on the ros2 package creations commands by auto generating majority of the ros2 related code including:
 - Creating config folder with param file
 - Creating launch folder with an auto generated launch file ready to use
 - Creates a generic node file linked to the ros2 command
