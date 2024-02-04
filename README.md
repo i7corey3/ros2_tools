@@ -29,7 +29,8 @@ To create an example package in c++ run:
 ### Notes
 
 Currently the windows createPackage.bat file only works with ros2 galactic 
-If yoou have another ros2 distro change the following line to the correct path inside the createPackage.bat file
+
+If you have another ros2 distro change the following line to the correct path inside the createPackage.bat file
 
 ```
 call C:\opt\ros\galactic\x64\setup.bat
