@@ -1,6 +1,7 @@
 import os
 import sys
 import yaml
+from pathlib import Path
 
 
 def camel_case(s):
@@ -11,7 +12,8 @@ def camel_case(s):
     return newString
     
 def createNodePython(name, node):
-    path = os.path.dirname(__file__)
+    path = f"{Path(__file__).parents[1]}/src"
+   
     with open(f"{path}/{name}/{name}/{name}.py", "w") as file:
 
         data = ["import rclpy",
