@@ -1,4 +1,5 @@
 cd %~p0
+cd ..
 call C:\opt\ros\galactic\x64\setup.bat
 @echo off
 
@@ -11,12 +12,14 @@ if "%1"=="c++" (goto :CPP)
 
 :PYTHON
 call ros2 pkg create --build-type ament_python %2
+move %2 src/
 call python %~p0buildNode.py %2 python %3
 exit 1
 
 
 :CPP
 call ros2 pkg create --build-type ament_cmake %2
+move %2 src/
 call python %~p0buildNode.py %2 c++ %3
 exit 1
 
