@@ -111,7 +111,7 @@ def createNodePython(name, node):
            f.write(line + '\n')
 
 def createNodeCpp(name, node):
-    path = os.path.dirname(__file__)
+    path = f"{Path(__file__).parents[1]}/src"
     with open(f"{path}/{name}/src/{name}.cpp", "w") as file:
 
         data = [
