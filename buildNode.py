@@ -29,7 +29,6 @@ def createNodePython(name, node):
                 '\t\t\tnamespace="",',
                 '\t\t\tparameters=[',
                 '',
-                '\t\t\t\t("use_sim_time", False),',
                 '\t\t\t]',
                 '\t\t)',
                 " ",
