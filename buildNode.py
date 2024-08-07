@@ -36,7 +36,7 @@ def createNodePython(name, node):
                 '',
                 '\t\tself.get_logger().info(f"sim_time is set to {self.sim_time}")',
                 '',
-                "\ttime.sleep(1)",
+                "\t\ttime.sleep(1)",
                 " ",
                 " ",
                 " ",
