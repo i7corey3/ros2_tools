@@ -1,6 +1,7 @@
 import os
 import sys
 import yaml
+import shutil
 from pathlib import Path
 
 
@@ -299,6 +300,139 @@ def createNodeCpp(name, node):
         for line in data:
            f.write(line + '\n')
 
+def createMainPackage(name):
+    path = f"{Path(__file__).parents[1]}/src"
+
+    with open(f"{path}/{name}/CMakeLists.txt", "r") as f:
+        data = f.readlines()
+
+
+    lines = [
+        "",
+        "install(",
+        "\tDIRECTORY config description launch worlds",
+        "\tDESTINATION share/${PROJECT_NAME}",
+        ")",
+        ""
+    ]
+
+    ss = ""
+    for i in lines:
+        ss = ss + i + "\n"
+    data.insert(25, ss)
+
+    s = ""
+    for i in data:
+        s += i
+
+    os.remove(f"{path}/{name}/CMakeLists.txt")
+    shutil.rmtree(f"{path}/{name}/include")
+    os.rmdir(f"{path}/{name}/src")
+
+    with open(f"{path}/{name}/CMakeLists.txt", "w") as f:
+        f.write(s)
+
+    os.mkdir(f"{path}/{name}/config")
+    os.mkdir(f"{path}/{name}/launch")
+    os.mkdir(f"{path}/{name}/description")
+    os.mkdir(f"{path}/{name}/worlds")
+
+    xacro_robot = [
+        '<?xml version="1.0"?>',
+        f'<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="{name}">\n',
+        '<xacro:arg name="use_ros2_control" default="true"/>\n',
+        f'<xacro:include filename="{name}_core.xacro" />\n',
+        '<xacro:if value="$(arg use_ros2_control)">',
+        '\t<xacro:include filename="ros2_control.xacro" />',
+        '</xacro:if>\n',
+        '<xacro:unless value="$(arg use_ros2_control)">',
+        '\t<xacro:include filename="gazebo_control.xacro" />',
+        '</xacro:unless>\n\n',
+        '</robot>'
+
+    ]
+
+    xacro = [
+        '<?xml version="1.0"?>',
+        f'<robot xmlns:xacro="http://www.ros.org/wiki/xacro">',
+        "",
+        '<xacro:include filename="inertial_macros.xacro"/>\n',
+        '<!-- BASE LINK -->\n',
+        '<link name="base_link">\n',
+        '</link>\n',
+        '<!-- BASE_FOOTPRINT LINK -->\n',
+        '<joint name="base_footprint_joint" type="fixed">',
+        '\t<parent link="base_link"/>',
+        '\t<child link="base_footprint"/>',
+        '\t<origin xyz="0 0 0" rpy="0 0 0"/>\n',
+        '</joint>\n',
+        '<link name="base_footprint">\n',
+        '</link>',
+        '\n\n',
+        '</robot>'
+
+    ]
+    ss = ""
+    for i in xacro_robot:
+        ss = ss + i + "\n"
+
+    with open(f"{path}/{name}/description/{name}.urdf.xacro", "w") as f:
+        f.write(ss)
+
+    ss = ""
+    for i in xacro:
+        ss = ss + i + "\n"
+
+    with open(f"{path}/{name}/description/{name}_core.xacro", "w") as f:
+        f.write(ss)
+
+    shutil.copy(f"{os.path.dirname(__file__)}/files/inertial_macros.xacro", f"{path}/{name}/description/")
+    shutil.copy(f"{os.path.dirname(__file__)}/files/ros2_control.xacro", f"{path}/{name}/description/")
+    
+
+    with open(f"{path}/{name}/description/ros2_control.xacro", "r") as f:
+        data = f.readlines()
+
+    data.insert(25, f"\t\t\t<parameters>$(find {name})/config/my_controllers.yaml</parameters>")
+    
+    s = ""
+    for i in data:
+        s += i
+    
+    with open(f"{path}/{name}/description/ros2_control.xacro", "w") as f:
+        f.write(s)
+
+    shutil.copy(f"{os.path.dirname(__file__)}/files/gazebo_params.yaml", f"{path}/{name}/config/")
+    shutil.copy(f"{os.path.dirname(__file__)}/files/my_controllers.yaml", f"{path}/{name}/config/")
+
+    shutil.copy(f"{os.path.dirname(__file__)}/files/rsp.launch.py", f"{path}/{name}/launch/")
+
+    with open(f"{path}/{name}/launch/rsp.launch.py", "r") as f:
+        data = f.readlines()
+
+    data.insert(19, f"    pkg_path = os.path.join(get_package_share_directory('{name}'))")
+    s = ""
+    for i in data:
+        s += i
+    
+    with open(f"{path}/{name}/launch/rsp.launch.py", "w") as f:
+        f.write(s)
+
+    shutil.copy(f"{os.path.dirname(__file__)}/files/launch_sim.launch.py", f"{path}/{name}/launch/")
+
+    with open(f"{path}/{name}/launch/launch_sim.launch.py", "r") as f:
+        data = f.readlines()
+
+    data.insert(19, f"    package_name='{name}'")
+    s = ""
+    for i in data:
+        s += i
+    
+    with open(f"{path}/{name}/launch/launch_sim.launch.py", "w") as f:
+        f.write(s)
+
+    shutil.copy(f"{os.path.dirname(__file__)}/files/empty.world", f"{path}/{name}/worlds/")
+
 
 if __name__ == '__main__':
     
@@ -309,3 +443,5 @@ if __name__ == '__main__':
         createNodePython(name, node)
     elif code == "c++":
         createNodeCpp(name, node)
+    elif code == "main":
+        createMainPackage(name)

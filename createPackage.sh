@@ -25,8 +25,13 @@ case $1 in
         mv $2 $WS/src
         python3 $PWD/buildNode.py $2 c++ $3
     ;;
+    main)
+        ros2 pkg create --build-type ament_cmake $2
+        mv $2 $WS/src
+        python3 $PWD/buildNode.py $2 main pass
+    ;;
     *)
-        printf "Type python or c++ then the package name and node name\n\nexample:\n\t./createPackage python package_name node_name\n\n"
+        printf "Type python, c++ or main (for urdf main package) then the package name and node name\n\nexample:\n\t./createPackage python package_name node_name\n\n"
     ;;
 esac
 cd ../
