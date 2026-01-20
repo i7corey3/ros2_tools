@@ -31,7 +31,7 @@ case $1 in
         python3 $PWD/buildNode.py $2 main pass
     ;;
     *)
-        printf "Type python, c++ or main (for urdf main package) then the package name and node name\n\nexample:\n\t./createPackage python package_name node_name\n\n"
+        printf "Type python, c++ or main (for urdf main package) then the package name and node name\n\nexample:\nFor Python\n\t./createPackage.sh python <package_name> <node_name>\n\nFor C++\n\t./createPackage.sh c++ <package_name> <node_name>\n\nFor main urdf package\n\t./createPackage.sh main <package_name>\n"
     ;;
 esac
 cd ../
