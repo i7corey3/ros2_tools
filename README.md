@@ -5,11 +5,12 @@ This repository expands on the ros2 package creations commands by auto generatin
 - Creating a launch folder with an auto generated launch file ready to use
 - Creates a generic node file linked with the ros2 command
 - Works with both python and c++ packages
-- Available for ros2 on Linux and Windows
+- Available for ros2 on Linux and Windows (windows not fully tested)
+- Creating a generic main folder for storing URDF files, maps, worlds and global launch scripts
 
 ## How To Use
 
-Add both the createPackage and buildNode files to your ros2 workspace 
+Clone this repo inside your ros2_ws
 
 > createPackage.sh if using ros2 on Linux, createPackage.bat for Windows
 
@@ -27,8 +28,14 @@ To create an example package in c++ run:
 ```
 ./createPackage.sh c++ <package_naem> <node_name>
 ```
-
+To create a main package (URDF, etc) run:
+```
+./createPackage.sh main <package_name> 
+```
 ### Notes
+
+Currently these tools have been tested with ROS2 Humble. Experience may differ for other ROS Distros
+
 
 Currently the windows createPackage.bat file only works with ros2 galactic 
 
