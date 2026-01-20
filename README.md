@@ -15,8 +15,6 @@ Clone this repo inside your ros2_ws
 > createPackage.sh if using ros2 on Linux, createPackage.bat for Windows
 
 
-This script takes in three arguments <code_language> <package_name> <node_name>
-
 To create an example package in python run:
 
 ```
