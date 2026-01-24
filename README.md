@@ -30,6 +30,10 @@ To create a main package (URDF, etc) run:
 ```
 ./createPackage.sh main <package_name> 
 ```
+To create custom message for topiccs and services run:
+```
+./createPackage.sh messages <package_name> 
+```
 ### Notes
 
 Currently these tools have been tested with ROS2 Humble. Experience may differ for other ROS Distros
