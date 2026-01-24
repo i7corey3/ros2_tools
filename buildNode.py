@@ -68,7 +68,7 @@ def createNodePython(name, node):
     data.insert(2, "from glob import glob\n")
     data.insert(14, "\t\t(os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),\n")
     data.insert(15, "\t\t(os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*[yaml]*'))),\n")
-    data.insert(26, f"\t\t\t'{node} = {name}.{name}:main'\n")
+    data.insert(30, f"\t\t\t'{node} = {name}.{name}:main'\n")
 
     s = ""
     for i in data:
