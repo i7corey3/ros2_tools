@@ -30,8 +30,13 @@ case $1 in
         mv $2 $WS/src
         python3 $PWD/buildNode.py $2 main pass
     ;;
+    messages)
+        ros2 pkg create --build-type ament_cmake $2
+        mv $2 $WS/src
+        python3 $PWD/buildNode.py $2 messages none
+    ;;
     *)
-        printf "Type python, c++ or main (for urdf main package) then the package name and node name\n\nexample:\nFor Python\n\t./createPackage.sh python <package_name> <node_name>\n\nFor C++\n\t./createPackage.sh c++ <package_name> <node_name>\n\nFor main urdf package\n\t./createPackage.sh main <package_name>\n"
+        printf "Type python, c++, messages, or main (for urdf main package) then the package name and node name\n\nexample:\nFor Python\n\t./createPackage.sh python <package_name> <node_name>\n\nFor C++\n\t./createPackage.sh c++ <package_name> <node_name>\n\nFor main urdf package\n\t./createPackage.sh main <package_name>\n\nFor custom messages\n\t./createPackage.sh messages <package_name>\n\n"
     ;;
 esac
 cd ../

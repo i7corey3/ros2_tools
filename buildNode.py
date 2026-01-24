@@ -433,6 +433,95 @@ def createMainPackage(name):
 
     shutil.copy(f"{os.path.dirname(__file__)}/files/empty.world", f"{path}/{name}/worlds/")
 
+def createMessagePackage(name):
+    path = f"{Path(__file__).parents[1]}/src"
+    shutil.rmtree(f"{path}/{name}/src")
+    shutil.rmtree(f"{path}/{name}/include")
+    os.mkdir(f"{path}/{name}/msg")
+    os.mkdir(f"{path}/{name}/srv")
+
+    cmake = [
+        "cmake_minimum_required(VERSION 3.5)",
+        f"project({name})",
+        "",
+        "# Default to C99",
+        "if(NOT CMAKE_C_STANDARD)",
+        "\tset(CMAKE_C_STANDARD 99)",
+        "endif()",
+        "",
+        "# Default to C++14",
+        "if(NOT CMAKE_CXX_STANDARD)",
+        "\tset(CMAKE_CXX_STANDARD 14)",
+        "endif()",
+        "",
+        'if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")',
+        "\tadd_compile_options(-Wall -Wextra -Wpedantic)",
+        "endif()",
+        "",
+        "# find dependencies",
+        "find_package(ament_cmake REQUIRED)",
+        "find_package(nav_msgs REQUIRED)",
+        "# uncomment the following section in order to fill in",
+        "# further dependencies manually.",
+        "# find_package(<dependency> REQUIRED)",
+        "",
+        "if(BUILD_TESTING)",
+        "\tfind_package(ament_lint_auto REQUIRED)",
+        "\t# the following line skips the linter which checks for copyrights",
+        "\t# uncomment the line when a copyright and license is not present in all source files",
+        "\t#set(ament_cmake_copyright_FOUND TRUE)",
+        "\t# the following line skips cpplint (only works in a git repo)",
+        "\t# uncomment the line when this package is not in a git repo",
+        "\t#set(ament_cmake_cpplint_FOUND TRUE)",
+        "\tament_lint_auto_find_test_dependencies()",
+        "endif()",
+        "",
+        "find_package(rosidl_default_generators REQUIRED)",
+        "",
+        "rosidl_generate_interfaces(${PROJECT_NAME}",
+        '\t"msg/Placeholder.msg"',
+        '\t"srv/Placeholder.srv"',
+        ")",
+        "",
+        "",
+        "ament_package()"
+    ]
+
+    ss = ""
+    for i in cmake:
+        ss = ss + i + "\n"
+
+    with open(f"{path}/{name}/CMakeLists.txt", "w") as f:
+        f.write(ss)
+
+    with open(f"{path}/{name}/package.xml", "r") as f:
+        data = f.readlines()
+
+    data.insert(14, "\n")
+    data.insert(15, "\t<build_depend>rosidl_default_generators</build_depend>\n")
+    data.insert(16, "\t<exec_depend>rosidl_default_runtime</exec_depend>\n")
+    data.insert(17, "\t<member_of_group>rosidl_interface_packages</member_of_group>\n")
+    data.insert(18, "\n")
+
+    ss = ""
+    for i in data:
+        ss = ss + i
+
+    with open(f"{path}/{name}/package.xml", "w") as f:
+        f.write(ss)
+
+    msg = "int32 data"
+    srv = "int32 input\n---\nint32 output"
+
+    with open(f"{path}/{name}/msg/Placeholder.msg", 'w') as f:
+        f.write(msg)
+
+    with open(f"{path}/{name}/srv/Placeholder.srv", 'w') as f:
+        f.write(srv)
+
+    
+    
+
 
 if __name__ == '__main__':
     
@@ -445,3 +534,5 @@ if __name__ == '__main__':
         createNodeCpp(name, node)
     elif code == "main":
         createMainPackage(name)
+    elif code == "messages":
+        createMessagePackage(name)
