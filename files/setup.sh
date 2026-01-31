@@ -9,7 +9,7 @@ BASEDIR=$(cd $(dirname $0) && pwd)
             echo Scripts are in /usr/local/bin/
             echo System services are in /etc/systemd/system/
             
-            sudo chmod +x $BASEDIR/scripts/*
+            find "$BASEDIR/scripts" -type f -name "*.sh" -exec chmod +x {} +
             sudo cp -r $BASEDIR/scripts/* /usr/local/bin/
             for dir in $BASEDIR/services/*; do
                 if [ -d "$dir" ]; then
