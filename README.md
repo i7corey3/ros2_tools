@@ -34,6 +34,11 @@ To create custom message for topiccs and services run:
 ```
 ./createPackage.sh messages <package_name> 
 ```
+To create a systemctl folder run:
+```
+./createPackage.sh systemctl
+```
+- systemctl folder handles allocating and managing custom systemctl scripts used for linux only.
 ### Notes
 
 Currently these tools have been tested with ROS2 Humble. Experience may differ for other ROS Distros
