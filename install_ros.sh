@@ -55,6 +55,8 @@ sudo dpkg -i "$TMP_DEB" || sudo apt -f install -y
 sudo apt update
 sudo apt upgrade -y
 
+sudo apt install python3-pip -y
+
 # install ROS packages depending on ENV
 if [[ "${ENV}" == "bare" ]]; then
   sudo apt install -y ros-humble-ros-base
