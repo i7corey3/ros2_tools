@@ -15,7 +15,7 @@ def camel_case(s):
 def createNodePython(name, node):
     path = f"{Path(__file__).parents[1]}/src"
    
-    with open(f"{path}/{name}/{name}/{name}.py", "w") as file:
+    with open(f"{path}/{name}/{name}/{node}.py", "w") as file:
 
         data = ["import rclpy",
                 "from rclpy.node import Node",
@@ -68,7 +68,7 @@ def createNodePython(name, node):
     data.insert(2, "from glob import glob\n")
     data.insert(14, "\t\t(os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),\n")
     data.insert(15, "\t\t(os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*[yaml]*'))),\n")
-    data.insert(30, f"\t\t\t'{node} = {name}.{name}:main'\n")
+    data.insert(30, f"\t\t\t'{node} = {name}.{node}:main'\n")
 
     s = ""
     for i in data:
@@ -124,7 +124,7 @@ def createNodePython(name, node):
 
 def createNodeCpp(name, node):
     path = f"{Path(__file__).parents[1]}/src"
-    with open(f"{path}/{name}/src/{name}.cpp", "w") as file:
+    with open(f"{path}/{name}/src/{node}.cpp", "w") as file:
 
         data = [
             "#include <iostream>",
@@ -184,7 +184,7 @@ def createNodeCpp(name, node):
         "add_library(",
         "\t${PROJECT_NAME}",
         "\tSHARED",
-        f"\tsrc/{name}.cpp",
+        f"\tsrc/{node}.cpp",
         ")",
         " ",
         "target_include_directories(",
@@ -202,7 +202,7 @@ def createNodeCpp(name, node):
         " ",
         "add_executable(",
         f"\t{node}",
-        f"\tsrc/{name}.cpp",
+        f"\tsrc/{node}.cpp",
         ")",
         " ",
         f"ament_target_dependencies({node} ${'{dependencies}'})",
