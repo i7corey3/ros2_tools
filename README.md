@@ -7,6 +7,7 @@ This repository expands on the ros2 package creations commands by auto generatin
 - Works with both python and c++ packages
 - Available for ros2 on Linux and Windows (windows not fully tested)
 - Creating a generic main folder for storing URDF files, maps, worlds and global launch scripts
+- Creating a systemctl folder with tools used for managing custom systemctl scripts 
 
 ## How To Use
 
