@@ -6,88 +6,122 @@ from pathlib import Path
 
 
 def camel_case(s):
-    newString = ''
-    temp = s.split('_')
+    newString = ""
+    temp = s.split("_")
     for st in temp:
         newString += (st[0].upper() + st[1:])
     return newString
-    
+
+
+def write_lines(path, lines):
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        for line in lines:
+            f.write(line if line.endswith("\n") else line + "\n")
+
+
+def read_lines(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return f.readlines()
+
+
+def insert_after(lines, needle, new_lines):
+    if isinstance(new_lines, str):
+        new_lines = [new_lines]
+
+    for i, line in enumerate(lines):
+        if needle in line:
+            for offset, new_line in enumerate(new_lines):
+                lines.insert(i + 1 + offset, new_line if new_line.endswith("\n") else new_line + "\n")
+            return True
+    return False
+
+
+def insert_before(lines, needle, new_lines):
+    if isinstance(new_lines, str):
+        new_lines = [new_lines]
+    for i, line in enumerate(lines):
+        if needle in line:
+            for offset, new_line in enumerate(new_lines):
+                lines.insert(i + offset, new_line if new_line.endswith("\n") else new_line + "\n")
+            return True
+    return False
+
+
+def safe_mkdir(path):
+    os.makedirs(path, exist_ok=True)
+
+
 def createNodePython(name, node):
     path = f"{Path(__file__).parents[1]}/src"
-   
-    with open(f"{path}/{name}/{name}/{node}.py", "w") as file:
 
-        data = ["import rclpy",
-                "from rclpy.node import Node",
-                "import time",
-                "",
-                "",
-                f"class {camel_case(name)}(Node):",
-                "\tdef __init__(self):",
-                f"\t\tsuper().__init__('{node}')",
-                '',
-                "\t\tself.declare_parameters(",
-                '\t\t\tnamespace="",',
-                '\t\t\tparameters=[',
-                '',
-                '\t\t\t]',
-                '\t\t)',
-                "",
-                '\t\tself.sim_time = self.get_parameter("use_sim_time").get_parameter_value().bool_value',
-                '',
-                '\t\tself.get_logger().info(f"sim_time is set to {self.sim_time}")',
-                '',
-                "\t\ttime.sleep(1)",
-                "",
-                "",
-                "",
-                "def main(args=None):",
-                "\trclpy.init(args=args)",
-                "",
-                f"\t{name} = {camel_case(name)}()",
-                "",
-                f"\trate = {name}.create_rate(20)",
-                "\twhile rclpy.ok():",
-                f"\t\trclpy.spin_once({name})",
-                "",
-                f"\t{name}.destroy_node()",
-                "\trclpy.shutdown()"
-                
-                ]
+    safe_mkdir(f"{path}/{name}/{name}")
+    safe_mkdir(f"{path}/{name}/config")
+    safe_mkdir(f"{path}/{name}/launch")
 
-        for line in data:
-           file.write(line + '\n')
+    with open(f"{path}/{name}/{name}/{node}.py", "w", encoding="utf-8", newline="\n") as file:
+        data = [
+            "import rclpy",
+            "from rclpy.node import Node",
+            "import time",
+            "",
+            "",
+            f"class {camel_case(name)}(Node):",
+            "\tdef __init__(self):",
+            f"\t\tsuper().__init__('{node}')",
+            "",
+            "\t\tself.declare_parameters(",
+            '\t\t\tnamespace="",',
+            "\t\t\tparameters=[",
+            "",
+            "\t\t\t]",
+            "\t\t)",
+            "",
+            '\t\tself.sim_time = self.get_parameter("use_sim_time").get_parameter_value().bool_value',
+            "",
+            '\t\tself.get_logger().info(f"sim_time is set to {self.sim_time}")',
+            "",
+            "\t\ttime.sleep(1)",
+            "",
+            "",
+            "",
+            "def main(args=None):",
+            "\trclpy.init(args=args)",
+            "",
+            f"\t{name} = {camel_case(name)}()",
+            "",
+            f"\trate = {name}.create_rate(20)",
+            "\twhile rclpy.ok():",
+            f"\t\trclpy.spin_once({name})",
+            "",
+            f"\t{name}.destroy_node()",
+            "\trclpy.shutdown()",
+        ]
+        write_lines(file.name, data)
 
-
-   
-
-    with open(f"{path}/{name}/setup.py", "r") as f:
+    with open(f"{path}/{name}/setup.py", "r", encoding="utf-8") as f:
         data = f.readlines()
 
-    data.insert(1, "import os\n")
-    data.insert(2, "from glob import glob\n")
-    data.insert(14, "\t\t(os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),\n")
-    data.insert(15, "\t\t(os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*[yaml]*'))),\n")
-    data.insert(30, f"\t\t\t'{node} = {name}.{node}:main'\n")
+    if not any("import os" in line for line in data):
+        insert_after(data, "from setuptools import", "import os\n")
+    if not any("from glob import glob" in line for line in data):
+        insert_after(data, "import os", "from glob import glob\n")
 
-    s = ""
-    for i in data:
-        s += i
+    launch_line = "\t\t(os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),\n"
+    config_line = "\t\t(os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*[yaml]*'))),\n"
+    entry_line = f"\t\t\t'{node} = {name}.{node}:main',\n"
 
-    os.remove(f"{path}/{name}/setup.py")
+    if not any("launch" in line and "glob(os.path.join('launch'" in line for line in data):
+        insert_after(data, " ('share/' + package_name, ['package.xml']),", [launch_line, config_line])
+    if not any(entry_line.strip() in line.strip() for line in data):
+        insert_after(data, "'console_scripts': [", entry_line)
 
-    with open(f"{path}/{name}/setup.py", "w") as f:
-        f.write(s)
-    
-    os.mkdir(f"{path}/{name}/config")
-    os.mkdir(f"{path}/{name}/launch")
+    write_lines(f"{path}/{name}/setup.py", data)
 
-    with open(f"{path}/{name}/config/params.yaml", "w") as f:
-        data = [{f"{node}": {'ros__parameters': {'use_sim_time': False}}}]
-        yaml.dump_all(data, f)
+    with open(f"{path}/{name}/config/params.yaml", "w", encoding="utf-8", newline="\n") as f:
+        data = [{f"{node}": {"ros__parameters": {"use_sim_time": False}}}]
+        yaml.safe_dump(data[0], f, sort_keys=False)
 
-    with open(f"{path}/{name}/launch/{name}.launch.py", "w") as f:
-        
+    with open(f"{path}/{name}/launch/{name}.launch.py", "w", encoding="utf-8", newline="\n") as f:
         data = [
             "import os",
             " ",
@@ -101,11 +135,11 @@ def createNodePython(name, node):
             " ",
             "def generate_launch_description():",
             " ",
-                f"\tpackage_name = '{name}'\n",
+            f"\tpackage_name = '{name}'\n",
             " ",
             "\tparams_file = os.path.join(get_package_share_directory(package_name), 'config', 'params.yaml')",
             "\tcwd = f'{Path(__file__).parents[5]}/src/{package_name}/config/params.yaml'",
-	        "\tos.system(f'cp {cwd} {params_file}')",
+            "\tos.system(f'cp {cwd} {params_file}')",
             " ",
             f"\t{name} = Node(",
             "\t\tpackage=package_name,",
@@ -116,16 +150,18 @@ def createNodePython(name, node):
             " ",
             "\treturn LaunchDescription([",
             f"\t\t{name}",
-            "\t])"
+            "\t])",
         ]
+        write_lines(f"{path}/{name}/launch/{name}.launch.py", data)
 
-        for line in data:
-           f.write(line + '\n')
 
 def createNodeCpp(name, node):
     path = f"{Path(__file__).parents[1]}/src"
-    with open(f"{path}/{name}/src/{node}.cpp", "w") as file:
+    safe_mkdir(f"{path}/{name}/src")
+    safe_mkdir(f"{path}/{name}/config")
+    safe_mkdir(f"{path}/{name}/launch")
 
+    with open(f"{path}/{name}/src/{node}.cpp", "w", encoding="utf-8", newline="\n") as file:
         data = [
             "#include <iostream>",
             "#include <chrono>",
@@ -161,19 +197,36 @@ def createNodeCpp(name, node):
             f"    return 0;",
             "}",
         ]
+        write_lines(file.name, data)
 
-        for line in data:
-           file.write(line + '\n')
-
-    
-    with open(f"{path}/{name}/CMakeLists.txt", "r") as f:
-        data = f.readlines()
-
-    data.insert(9, "find_package(rclcpp REQUIRED)\n")
-    data.insert(10, "find_package(std_msgs REQUIRED)\n")
-    data.insert(26, "include_directories(include)\n")
-    
-    lines = [
+    cmake = [
+        "cmake_minimum_required(VERSION 3.8)",
+        f"project({name})",
+        "",
+        "if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES \"Clang\")",
+        "  add_compile_options(-Wall -Wextra -Wpedantic)",
+        "endif()",
+        "",
+        "# find dependencies",
+        "find_package(ament_cmake REQUIRED)",
+        "find_package(rclcpp REQUIRED)",
+        "find_package(std_msgs REQUIRED)",
+        "# uncomment the following section in order to fill in",
+        "# further dependencies manually.",
+        "# find_package(<dependency> REQUIRED)",
+        "",
+        "if(BUILD_TESTING)",
+        "  find_package(ament_lint_auto REQUIRED)",
+        "  # the following line skips the linter which checks for copyrights",
+        "  # comment the line when a copyright and license is added to all source files",
+        "  set(ament_cmake_copyright_FOUND TRUE)",
+        "  # the following line skips cpplint (only works in a git repo)",
+        "  # comment the line when this package is in a git repo and when",
+        "  # a copyright and license is added to all source files",
+        "  set(ament_cmake_cpplint_FOUND TRUE)",
+        "  ament_lint_auto_find_test_dependencies()",
+        "endif()",
+        "include_directories(include)",
         " ",
         "set(dependencies",
         "\trclcpp",
@@ -205,10 +258,10 @@ def createNodeCpp(name, node):
         f"\tsrc/{node}.cpp",
         ")",
         " ",
-        f"ament_target_dependencies({node} ${'{dependencies}'})",
+        f"ament_target_dependencies({node} ${{dependencies}})",
         " ",
         "install(",
-        "\tTARGETS", 
+        "\tTARGETS",
         "\t${PROJECT_NAME}",
         "\tDESTINATION lib/${PROJECT_NAME}",
         ")",
@@ -238,36 +291,22 @@ def createNodeCpp(name, node):
         "\t${PROJECT_NAME}",
         ")",
         " ",
-        "\tament_export_dependencies(",
+        "ament_export_dependencies(",
         "\t${dependencies}",
         ")",
         " ",
         " ",
-        "ament_export_include_directories(include)"
+        "ament_export_include_directories(include)",
+        "",
+        "ament_package()",
     ]
-    ss = ""
-    for i in lines:
-        ss = ss + i + "\n"
-    data.insert(27, ss)
+    write_lines(f"{path}/{name}/CMakeLists.txt", cmake)
 
-    s = ""
-    for i in data:
-        s += i
+    with open(f"{path}/{name}/config/params.yaml", "w", encoding="utf-8", newline="\n") as f:
+        data = [{f"{node}": {"ros__parameters": {"use_sim_time": False}}}]
+        yaml.safe_dump(data[0], f, sort_keys=False)
 
-    os.remove(f"{path}/{name}/CMakeLists.txt")
-
-    with open(f"{path}/{name}/CMakeLists.txt", "w") as f:
-        f.write(s)
-    
-    os.mkdir(f"{path}/{name}/config")
-    os.mkdir(f"{path}/{name}/launch")
-
-    with open(f"{path}/{name}/config/params.yaml", "w") as f:
-        data = [{f"{node}": {'ros__parameters': {'use_sim_time': False}}}]
-        yaml.dump_all(data, f)
-
-    with open(f"{path}/{name}/launch/{name}.launch.py", "w") as f:
-        
+    with open(f"{path}/{name}/launch/{name}.launch.py", "w", encoding="utf-8", newline="\n") as f:
         data = [
             "import os",
             " ",
@@ -280,7 +319,7 @@ def createNodeCpp(name, node):
             " ",
             "def generate_launch_description():",
             " ",
-                f"\tpackage_name = '{name}'\n",
+            f"\tpackage_name = '{name}'\n",
             " ",
             "\tparams_file = os.path.join(get_package_share_directory(package_name), 'config', 'params.yaml')",
             " ",
@@ -293,19 +332,16 @@ def createNodeCpp(name, node):
             " ",
             "\treturn LaunchDescription([",
             f"\t\t{name}",
-            "\t])"
-
+            "\t])",
         ]
+        write_lines(f"{path}/{name}/launch/{name}.launch.py", data)
 
-        for line in data:
-           f.write(line + '\n')
 
 def createMainPackage(name):
     path = f"{Path(__file__).parents[1]}/src"
 
-    with open(f"{path}/{name}/CMakeLists.txt", "r") as f:
+    with open(f"{path}/{name}/CMakeLists.txt", "r", encoding="utf-8") as f:
         data = f.readlines()
-
 
     lines = [
         "",
@@ -313,29 +349,25 @@ def createMainPackage(name):
         "\tDIRECTORY config description launch worlds",
         "\tDESTINATION share/${PROJECT_NAME}",
         ")",
-        ""
+        "",
     ]
 
-    ss = ""
-    for i in lines:
-        ss = ss + i + "\n"
+    ss = "".join(line if line.endswith("\n") else line + "\n" for line in lines)
     data.insert(25, ss)
 
-    s = ""
-    for i in data:
-        s += i
+    s = "".join(data)
 
     os.remove(f"{path}/{name}/CMakeLists.txt")
     shutil.rmtree(f"{path}/{name}/include")
     os.rmdir(f"{path}/{name}/src")
 
-    with open(f"{path}/{name}/CMakeLists.txt", "w") as f:
+    with open(f"{path}/{name}/CMakeLists.txt", "w", encoding="utf-8", newline="\n") as f:
         f.write(s)
 
-    os.mkdir(f"{path}/{name}/config")
-    os.mkdir(f"{path}/{name}/launch")
-    os.mkdir(f"{path}/{name}/description")
-    os.mkdir(f"{path}/{name}/worlds")
+    safe_mkdir(f"{path}/{name}/config")
+    safe_mkdir(f"{path}/{name}/launch")
+    safe_mkdir(f"{path}/{name}/description")
+    safe_mkdir(f"{path}/{name}/worlds")
 
     xacro_robot = [
         '<?xml version="1.0"?>',
@@ -348,13 +380,12 @@ def createMainPackage(name):
         '<xacro:unless value="$(arg use_ros2_control)">',
         '\t<xacro:include filename="gazebo_control.xacro" />',
         '</xacro:unless>\n\n',
-        '</robot>'
-
+        '</robot>',
     ]
 
     xacro = [
         '<?xml version="1.0"?>',
-        f'<robot xmlns:xacro="http://www.ros.org/wiki/xacro">',
+        '<robot xmlns:xacro="http://www.ros.org/wiki/xacro">',
         "",
         '<xacro:include filename="inertial_macros.xacro"/>\n',
         '<!-- BASE LINK -->\n',
@@ -369,69 +400,56 @@ def createMainPackage(name):
         '<link name="base_footprint">\n',
         '</link>',
         '\n\n',
-        '</robot>'
-
+        '</robot>',
     ]
-    ss = ""
-    for i in xacro_robot:
-        ss = ss + i + "\n"
 
-    with open(f"{path}/{name}/description/{name}.urdf.xacro", "w") as f:
+    ss = "".join(i + "\n" for i in xacro_robot)
+    with open(f"{path}/{name}/description/{name}.urdf.xacro", "w", encoding="utf-8", newline="\n") as f:
         f.write(ss)
 
-    ss = ""
-    for i in xacro:
-        ss = ss + i + "\n"
-
-    with open(f"{path}/{name}/description/{name}_core.xacro", "w") as f:
+    ss = "".join(i + "\n" for i in xacro)
+    with open(f"{path}/{name}/description/{name}_core.xacro", "w", encoding="utf-8", newline="\n") as f:
         f.write(ss)
 
     shutil.copy(f"{os.path.dirname(__file__)}/files/inertial_macros.xacro", f"{path}/{name}/description/")
     shutil.copy(f"{os.path.dirname(__file__)}/files/ros2_control.xacro", f"{path}/{name}/description/")
-    
 
-    with open(f"{path}/{name}/description/ros2_control.xacro", "r") as f:
+    with open(f"{path}/{name}/description/ros2_control.xacro", "r", encoding="utf-8") as f:
         data = f.readlines()
 
     data.insert(25, f"\t\t\t<parameters>$(find {name})/config/my_controllers.yaml</parameters>")
-    
-    s = ""
-    for i in data:
-        s += i
-    
-    with open(f"{path}/{name}/description/ros2_control.xacro", "w") as f:
+
+    s = "".join(data)
+
+    with open(f"{path}/{name}/description/ros2_control.xacro", "w", encoding="utf-8", newline="\n") as f:
         f.write(s)
 
     shutil.copy(f"{os.path.dirname(__file__)}/files/gazebo_params.yaml", f"{path}/{name}/config/")
     shutil.copy(f"{os.path.dirname(__file__)}/files/my_controllers.yaml", f"{path}/{name}/config/")
-
     shutil.copy(f"{os.path.dirname(__file__)}/files/rsp.launch.py", f"{path}/{name}/launch/")
 
-    with open(f"{path}/{name}/launch/rsp.launch.py", "r") as f:
+    with open(f"{path}/{name}/launch/rsp.launch.py", "r", encoding="utf-8") as f:
         data = f.readlines()
 
     data.insert(19, f"    pkg_path = os.path.join(get_package_share_directory('{name}'))")
-    s = ""
-    for i in data:
-        s += i
-    
-    with open(f"{path}/{name}/launch/rsp.launch.py", "w") as f:
+    s = "".join(data)
+
+    with open(f"{path}/{name}/launch/rsp.launch.py", "w", encoding="utf-8", newline="\n") as f:
         f.write(s)
 
     shutil.copy(f"{os.path.dirname(__file__)}/files/launch_sim.launch.py", f"{path}/{name}/launch/")
 
-    with open(f"{path}/{name}/launch/launch_sim.launch.py", "r") as f:
+    with open(f"{path}/{name}/launch/launch_sim.launch.py", "r", encoding="utf-8") as f:
         data = f.readlines()
 
     data.insert(19, f"    package_name='{name}'")
-    s = ""
-    for i in data:
-        s += i
-    
-    with open(f"{path}/{name}/launch/launch_sim.launch.py", "w") as f:
+    s = "".join(data)
+
+    with open(f"{path}/{name}/launch/launch_sim.launch.py", "w", encoding="utf-8", newline="\n") as f:
         f.write(s)
 
     shutil.copy(f"{os.path.dirname(__file__)}/files/empty.world", f"{path}/{name}/worlds/")
+
 
 def createMessagePackage(name):
     path = f"{Path(__file__).parents[1]}/src"
@@ -484,17 +502,15 @@ def createMessagePackage(name):
         ")",
         "",
         "",
-        "ament_package()"
+        "ament_package()",
     ]
 
-    ss = ""
-    for i in cmake:
-        ss = ss + i + "\n"
+    ss = "".join(i + "\n" for i in cmake)
 
-    with open(f"{path}/{name}/CMakeLists.txt", "w") as f:
+    with open(f"{path}/{name}/CMakeLists.txt", "w", encoding="utf-8", newline="\n") as f:
         f.write(ss)
 
-    with open(f"{path}/{name}/package.xml", "r") as f:
+    with open(f"{path}/{name}/package.xml", "r", encoding="utf-8") as f:
         data = f.readlines()
 
     data.insert(14, "\n")
@@ -503,31 +519,26 @@ def createMessagePackage(name):
     data.insert(17, "\t<member_of_group>rosidl_interface_packages</member_of_group>\n")
     data.insert(18, "\n")
 
-    ss = ""
-    for i in data:
-        ss = ss + i
+    ss = "".join(data)
 
-    with open(f"{path}/{name}/package.xml", "w") as f:
+    with open(f"{path}/{name}/package.xml", "w", encoding="utf-8", newline="\n") as f:
         f.write(ss)
 
     msg = "int32 data"
     srv = "int32 input\n---\nint32 output"
 
-    with open(f"{path}/{name}/msg/Placeholder.msg", 'w') as f:
+    with open(f"{path}/{name}/msg/Placeholder.msg", "w", encoding="utf-8", newline="\n") as f:
         f.write(msg)
 
-    with open(f"{path}/{name}/srv/Placeholder.srv", 'w') as f:
+    with open(f"{path}/{name}/srv/Placeholder.srv", "w", encoding="utf-8", newline="\n") as f:
         f.write(srv)
 
-    
-    
 
-
-if __name__ == '__main__':
-    
+if __name__ == "__main__":
     name = sys.argv[1]
     code = sys.argv[2]
     node = sys.argv[3]
+
     if code == "python":
         createNodePython(name, node)
     elif code == "c++":
