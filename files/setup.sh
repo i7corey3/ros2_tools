@@ -9,7 +9,7 @@ BASEDIR=$(cd $(dirname $0) && pwd)
             echo Scripts are in /usr/local/bin/
             echo System services are in /etc/systemd/system/
             
-            find "$BASEDIR/scripts" -type f -name "*.sh" -exec chmod +x {} +
+            sudo chmod +x $BASEDIR/scripts/*
             sudo cp -r $BASEDIR/scripts/* /usr/local/bin/
             for dir in $BASEDIR/services/*; do
                 if [ -d "$dir" ]; then
@@ -20,6 +20,24 @@ BASEDIR=$(cd $(dirname $0) && pwd)
             done
           
             sudo systemctl daemon-reload
+        ;;
+        restart)
+            
+            for dir in "$BASEDIR"/services/*; do
+                if [ -d "$dir" ]; then
+                    for service in "$dir"/*; do
+                        service_name="${service##*/}"
+
+                        if systemctl is-enabled --quiet "$service_name"; then
+                            echo "Restarting $service_name"
+                            sudo systemctl restart "$service_name"
+                        else
+                            echo "Skipping $service_name (not enabled)"
+                        fi
+                    done
+                fi
+            done
+                    
         ;;
         enable)
             echo Enabling all services!!
@@ -63,6 +81,7 @@ update
 enable
 disable
 remove
+restart
 "
             
         ;;
